@@ -1,4 +1,5 @@
 using System.Text;
+using BibliotecaApi.Middleware;
 using BibliotecaApi.Repositories;
 using BibliotecaApi.Repositories.Interfaces;
 using BibliotecaApi.Services;
@@ -102,6 +103,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Biblioteca API v1"));
 
