@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biblioteca API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #333;
+    }
+
+    header {
+      background: #1a237e;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 { font-size: 1.4rem; }
+
+    #user-info {
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    nav {
+      background: #283593;
+      display: flex;
+      gap: 0;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      color: #c5cae9;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+
+    nav button:hover, nav button.active {
+      background: #1a237e;
+      color: white;
+    }
+
+    #main { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    h2 { margin-bottom: 1.25rem; color: #1a237e; }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.2rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+    .card h3 { font-size: 1rem; margin-bottom: 0.4rem; color: #1a237e; }
+    .card p { font-size: 0.85rem; color: #666; margin-bottom: 0.2rem; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    .badge-green { background: #e8f5e9; color: #2e7d32; }
+    .badge-red { background: #ffebee; color: #c62828; }
+    .badge-blue { background: #e3f2fd; color: #1565c0; }
+
+    form { background: white; padding: 1.5rem; border-radius: 8px; max-width: 500px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; font-weight: 500; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #1a237e;
+    }
+
+    .btn {
+      padding: 0.6rem 1.4rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #1a237e; color: white; }
+    .btn-danger { background: #c62828; color: white; }
+    .btn-success { background: #2e7d32; color: white; }
+    .btn-secondary { background: #757575; color: white; }
+
+    .btn-row { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      padding: 0.8rem 1.4rem;
+      border-radius: 8px;
+      color: white;
+      font-size: 0.95rem;
+      z-index: 999;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    #toast.success { background: #2e7d32; }
+    #toast.error { background: #c62828; }
+
+    .detail-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      max-width: 550px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .detail-box p { margin-bottom: 0.6rem; font-size: 0.95rem; }
+    .detail-box strong { color: #1a237e; }
+
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    thead { background: #1a237e; color: white; }
+    th, td { padding: 0.8rem 1rem; text-align: left; font-size: 0.9rem; }
+    tbody tr:nth-child(even) { background: #f5f5f5; }
+    tbody tr:hover { background: #e8eaf6; }
+
+    .loading { text-align: center; padding: 2rem; color: #888; }
+
+    #login-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80vh;
+    }
+
+    #login-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    }
+
+    #login-box h2 { text-align: center; margin-bottom: 1.5rem; }
+
+    .tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 2px solid #e0e0e0; }
+    .tab { padding: 0.5rem 1rem; cursor: pointer; color: #888; font-weight: 500; }
+    .tab.active { color: #1a237e; border-bottom: 2px solid #1a237e; margin-bottom: -2px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📚 Biblioteca</h1>
+  <div id="user-info">
+    <span id="user-name"></span>
+    <button class="btn btn-secondary" id="btn-logout" style="display:none" onclick="logout()">Sair</button>
+  </div>
+</header>
+
+<nav id="navbar" style="display:none">
+  <button onclick="mostrarView('livros')" id="nav-livros">Livros</button>
+  <button onclick="mostrarView('emprestimos')" id="nav-emprestimos">Empréstimos</button>
+  <button onclick="mostrarView('novo-livro')" id="nav-novo-livro" class="nav-admin" style="display:none">+ Cadastrar Livro</button>
+  <button onclick="mostrarView('novo-emprestimo')" id="nav-novo-emprestimo">+ Novo Empréstimo</button>
+</nav>
+
+<div id="main">
+
+  <!-- Login / Registro -->
+  <div id="login-wrap">
+    <div id="login-box">
+      <h2>🔐 Biblioteca API</h2>
+      <div class="tabs">
+        <div class="tab active" onclick="alternarAba('login')">Entrar</div>
+        <div class="tab" onclick="alternarAba('registro')">Registrar</div>
+      </div>
+
+      <form id="form-login" onsubmit="fazerLogin(event)">
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="login-email" required placeholder="seu@email.com" />
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="login-senha" required placeholder="••••••" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Entrar</button>
+      </form>
+
+      <form id="form-registro" style="display:none" onsubmit="registrar(event)">
+        <div class="form-group">
+          <label>Nome</label>
+          <input type="text" id="reg-nome" required placeholder="Seu nome completo" />
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="reg-email" required placeholder="seu@email.com" />
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="reg-senha" required minlength="6" placeholder="Mínimo 6 caracteres" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Criar conta</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- View: Lista de Livros -->
+  <div class="view" id="view-livros">
+    <h2>Acervo de Livros</h2>
+    <div id="lista-livros" class="card-grid"><p class="loading">Carregando...</p></div>
+  </div>
+
+  <!-- View: Detalhe do Livro -->
+  <div class="view" id="view-detalhe-livro">
+    <div class="btn-row" style="margin-bottom:1rem">
+      <button class="btn btn-secondary" onclick="mostrarView('livros')">← Voltar</button>
+    </div>
+    <div id="detalhe-livro-content"></div>
+  </div>
+
+  <!-- View: Cadastrar Livro (Admin) -->
+  <div class="view" id="view-novo-livro">
+    <h2>Cadastrar Novo Livro</h2>
+    <form onsubmit="criarLivro(event)">
+      <div class="form-group"><label>Título</label><input type="text" id="l-titulo" required /></div>
+      <div class="form-group"><label>Autor</label><input type="text" id="l-autor" required /></div>
+      <div class="form-group"><label>ISBN</label><input type="text" id="l-isbn" required /></div>
+      <div class="form-group"><label>Ano de Publicação</label><input type="number" id="l-ano" min="1000" max="2100" required /></div>
+      <div class="form-group"><label>Gênero</label><input type="text" id="l-genero" /></div>
+      <div class="form-group"><label>Quantidade de Exemplares</label><input type="number" id="l-qtd" min="1" required /></div>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary">Cadastrar</button>
+        <button type="button" class="btn btn-secondary" onclick="mostrarView('livros')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- View: Empréstimos -->
+  <div class="view" id="view-emprestimos">
+    <h2 id="titulo-emprestimos">Meus Empréstimos</h2>
+    <div id="lista-emprestimos"><p class="loading">Carregando...</p></div>
+  </div>
+
+  <!-- View: Novo Empréstimo -->
+  <div class="view" id="view-novo-emprestimo">
+    <h2>Novo Empréstimo</h2>
+    <form onsubmit="criarEmprestimo(event)">
+      <div class="form-group">
+        <label>Livro</label>
+        <select id="e-livro-id" required>
+          <option value="">Selecione um livro...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data de Devolução Prevista</label>
+        <input type="date" id="e-data-devolucao" required />
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary">Confirmar Empréstimo</button>
+        <button type="button" class="btn btn-secondary" onclick="mostrarView('emprestimos')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = 'http://localhost:5000/api';
+  let token = localStorage.getItem('token');
+  let perfil = localStorage.getItem('perfil');
+  let nomeUsuario = localStorage.getItem('nomeUsuario');
+
+  // ---- Inicialização ----
+  if (token) iniciarSessao();
+
+  function iniciarSessao() {
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('navbar').style.display = 'flex';
+    document.getElementById('user-name').textContent = nomeUsuario || '';
+    document.getElementById('btn-logout').style.display = 'inline-block';
+
+    if (perfil === 'Admin') {
+      document.querySelectorAll('.nav-admin').forEach(el => el.style.display = 'inline-block');
+    }
+
+    mostrarView('livros');
+  }
+
+  function logout() {
+    localStorage.clear();
+    token = null; perfil = null; nomeUsuario = null;
+    document.getElementById('login-wrap').style.display = 'flex';
+    document.getElementById('navbar').style.display = 'none';
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  }
+
+  // ---- Navegação assíncrona (sem recarregar a página) ----
+  function mostrarView(nome) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+
+    document.getElementById(`view-${nome}`)?.classList.add('active');
+    document.getElementById(`nav-${nome}`)?.classList.add('active');
+
+    if (nome === 'livros') carregarLivros();
+    if (nome === 'emprestimos') carregarEmprestimos();
+    if (nome === 'novo-emprestimo') preencherSelectLivros();
+  }
+
+  // ---- Auth ----
+  function alternarAba(aba) {
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i === 0) === (aba === 'login')));
+    document.getElementById('form-login').style.display = aba === 'login' ? 'block' : 'none';
+    document.getElementById('form-registro').style.display = aba === 'registro' ? 'block' : 'none';
+  }
+
+  async function fazerLogin(e) {
+    e.preventDefault();
+    const body = { email: document.getElementById('login-email').value, senha: document.getElementById('login-senha').value };
+    const res = await apiFetch('/auth/login', 'POST', body, false);
+    if (res) salvarSessao(res);
+  }
+
+  async function registrar(e) {
+    e.preventDefault();
+    const body = {
+      nome: document.getElementById('reg-nome').value,
+      email: document.getElementById('reg-email').value,
+      senha: document.getElementById('reg-senha').value
+    };
+    const res = await apiFetch('/auth/registrar', 'POST', body, false);
+    if (res) salvarSessao(res);
+  }
+
+  function salvarSessao(dados) {
+    token = dados.token;
+    perfil = dados.perfil;
+    nomeUsuario = dados.nome;
+    localStorage.setItem('token', token);
+    localStorage.setItem('perfil', perfil);
+    localStorage.setItem('nomeUsuario', nomeUsuario);
+    toast('Bem-vindo, ' + nomeUsuario + '!', 'success');
+    iniciarSessao();
+  }
+
+  // ---- Livros ----
+  async function carregarLivros() {
+    document.getElementById('lista-livros').innerHTML = '<p class="loading">Carregando...</p>';
+    const livros = await apiFetch('/livros');
+    if (!livros) return;
+
+    if (livros.length === 0) {
+      document.getElementById('lista-livros').innerHTML = '<p>Nenhum livro cadastrado.</p>';
+      return;
+    }
+
+    document.getElementById('lista-livros').innerHTML = livros.map(l => `
+      <div class="card" onclick="verLivro('${l.id}')">
+        <h3>${escHtml(l.titulo)}</h3>
+        <p>✍️ ${escHtml(l.autor)}</p>
+        <p>📅 ${l.anoPublicacao} &nbsp;|&nbsp; 🏷️ ${escHtml(l.genero)}</p>
+        <p>ISBN: ${escHtml(l.isbn)}</p>
+        <span class="badge ${l.quantidadeDisponivel > 0 ? 'badge-green' : 'badge-red'}">
+          ${l.quantidadeDisponivel > 0 ? l.quantidadeDisponivel + ' disponível(is)' : 'Indisponível'}
+        </span>
+      </div>
+    `).join('');
+  }
+
+  async function verLivro(id) {
+    const l = await apiFetch('/livros/' + id);
+    if (!l) return;
+
+    const adminBtns = perfil === 'Admin' ? `
+      <button class="btn btn-danger" onclick="deletarLivro('${l.id}')">Excluir Livro</button>
+    ` : '';
+
+    document.getElementById('detalhe-livro-content').innerHTML = `
+      <div class="detail-box">
+        <h2>${escHtml(l.titulo)}</h2>
+        <br>
+        <p><strong>Autor:</strong> ${escHtml(l.autor)}</p>
+        <p><strong>ISBN:</strong> ${escHtml(l.isbn)}</p>
+        <p><strong>Ano:</strong> ${l.anoPublicacao}</p>
+        <p><strong>Gênero:</strong> ${escHtml(l.genero)}</p>
+        <p><strong>Total de exemplares:</strong> ${l.quantidadeTotal}</p>
+        <p><strong>Disponíveis:</strong> ${l.quantidadeDisponivel}</p>
+        <br>
+        <div class="btn-row">
+          ${l.quantidadeDisponivel > 0 ? `<button class="btn btn-success" onclick="irEmprestar('${l.id}')">📖 Emprestar</button>` : ''}
+          ${adminBtns}
+        </div>
+      </div>
+    `;
+    mostrarView('detalhe-livro');
+  }
+
+  async function criarLivro(e) {
+    e.preventDefault();
+    const body = {
+      titulo: document.getElementById('l-titulo').value,
+      autor: document.getElementById('l-autor').value,
+      isbn: document.getElementById('l-isbn').value,
+      anoPublicacao: parseInt(document.getElementById('l-ano').value),
+      genero: document.getElementById('l-genero').value,
+      quantidadeTotal: parseInt(document.getElementById('l-qtd').value)
+    };
+    const res = await apiFetch('/livros', 'POST', body);
+    if (res) { toast('Livro cadastrado com sucesso!', 'success'); mostrarView('livros'); e.target.reset(); }
+  }
+
+  async function deletarLivro(id) {
+    if (!confirm('Confirma a exclusão deste livro?')) return;
+    const ok = await apiFetch('/livros/' + id, 'DELETE');
+    if (ok !== null) { toast('Livro excluído.', 'success'); mostrarView('livros'); }
+  }
+
+  // ---- Empréstimos ----
+  async function carregarEmprestimos() {
+    document.getElementById('lista-emprestimos').innerHTML = '<p class="loading">Carregando...</p>';
+    const url = perfil === 'Admin' ? '/emprestimos' : '/emprestimos/meus';
+    document.getElementById('titulo-emprestimos').textContent = perfil === 'Admin' ? 'Todos os Empréstimos' : 'Meus Empréstimos';
+
+    const lista = await apiFetch(url);
+    if (!lista) return;
+
+    if (lista.length === 0) {
+      document.getElementById('lista-emprestimos').innerHTML = '<p>Nenhum empréstimo encontrado.</p>';
+      return;
+    }
+
+    const linhas = lista.map(e => {
+      const statusClass = e.status === 'Ativo' ? 'badge-blue' : 'badge-green';
+      const devolucao = e.dataDevolucaoReal ? new Date(e.dataDevolucaoReal).toLocaleDateString('pt-BR') : '—';
+      const btnDevolver = e.status === 'Ativo' ? `<button class="btn btn-success" style="padding:0.3rem 0.8rem;font-size:0.8rem" onclick="devolverLivro('${e.id}')">Devolver</button>` : '';
+      return `
+        <tr>
+          <td>${escHtml(e.tituloLivro)}</td>
+          <td>${escHtml(e.nomeUsuario)}</td>
+          <td>${new Date(e.dataEmprestimo).toLocaleDateString('pt-BR')}</td>
+          <td>${new Date(e.dataDevolucaoPrevista).toLocaleDateString('pt-BR')}</td>
+          <td>${devolucao}</td>
+          <td><span class="badge ${statusClass}">${e.status}</span></td>
+          <td>${btnDevolver}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('lista-emprestimos').innerHTML = `
+      <table>
+        <thead><tr><th>Livro</th><th>Usuário</th><th>Empréstimo</th><th>Prev. Devolução</th><th>Devolvido em</th><th>Status</th><th></th></tr></thead>
+        <tbody>${linhas}</tbody>
+      </table>`;
+  }
+
+  async function preencherSelectLivros() {
+    const livros = await apiFetch('/livros');
+    if (!livros) return;
+    const select = document.getElementById('e-livro-id');
+    const disponiveis = livros.filter(l => l.quantidadeDisponivel > 0);
+    select.innerHTML = '<option value="">Selecione um livro...</option>' +
+      disponiveis.map(l => `<option value="${l.id}">${escHtml(l.titulo)} — ${escHtml(l.autor)}</option>`).join('');
+
+    const min = new Date(); min.setDate(min.getDate() + 1);
+    document.getElementById('e-data-devolucao').min = min.toISOString().split('T')[0];
+  }
+
+  function irEmprestar(livroId) {
+    mostrarView('novo-emprestimo');
+    preencherSelectLivros().then(() => {
+      const sel = document.getElementById('e-livro-id');
+      if ([...sel.options].some(o => o.value === livroId)) sel.value = livroId;
+    });
+  }
+
+  async function criarEmprestimo(e) {
+    e.preventDefault();
+    const body = {
+      livroId: document.getElementById('e-livro-id').value,
+      dataDevolucaoPrevista: new Date(document.getElementById('e-data-devolucao').value).toISOString()
+    };
+    const res = await apiFetch('/emprestimos', 'POST', body);
+    if (res) { toast('Empréstimo criado com sucesso!', 'success'); mostrarView('emprestimos'); }
+  }
+
+  async function devolverLivro(id) {
+    if (!confirm('Confirma a devolução deste livro?')) return;
+    const res = await apiFetch('/emprestimos/' + id + '/devolver', 'PATCH', {});
+    if (res) { toast('Devolução registrada!', 'success'); carregarEmprestimos(); }
+  }
+
+  // ---- Utilitários ----
+  async function apiFetch(path, method = 'GET', body = null, auth = true) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (auth && token) headers['Authorization'] = 'Bearer ' + token;
+
+    try {
+      const res = await fetch(API + path, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined
+      });
+
+      if (res.status === 204) return {};
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 401) { logout(); return null; }
+        toast(data.erro || data.title || 'Erro na requisição', 'error');
+        return null;
+      }
+
+      return data;
+    } catch (err) {
+      toast('Erro de conexão com a API. Verifique se o servidor está rodando.', 'error');
+      return null;
+    }
+  }
+
+  function toast(msg, tipo = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = tipo;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 3500);
+  }
+
+  function escHtml(str) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str || ''));
+    return div.innerHTML;
+  }
+</script>
+</body>
+</html>
