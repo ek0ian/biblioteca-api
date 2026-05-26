@@ -1,4 +1,5 @@
 using System.Text;
+using BibliotecaApi.Infrastructure;
 using BibliotecaApi.Middleware;
 using BibliotecaApi.Repositories;
 using BibliotecaApi.Repositories.Interfaces;
@@ -23,6 +24,9 @@ if (!string.IsNullOrEmpty(mongoConnString))
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
 if (!string.IsNullOrEmpty(jwtSecret))
     builder.Configuration["JwtSettings:Secret"] = jwtSecret;
+
+// Database initializer
+builder.Services.AddSingleton<DatabaseInitializer>();
 
 // Repositories (Single Responsibility - SOLID S)
 builder.Services.AddSingleton<ILivroRepository, LivroRepository>();
@@ -102,6 +106,13 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Create MongoDB indexes on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbInit = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    await dbInit.InicializarAsync();
+}
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseSwagger();
